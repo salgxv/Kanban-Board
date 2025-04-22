@@ -1,3 +1,5 @@
+import { UserLogin } from "../interfaces/UserLogin";
+
 const login = async (userInfo: UserLogin): Promise<{ token: string }> => {
   try {
     const response = await fetch('https://kanban-board-droa.onrender.com/api/auth/login', {
@@ -12,9 +14,11 @@ const login = async (userInfo: UserLogin): Promise<{ token: string }> => {
       throw new Error(data.message || 'Login failed');
     }
 
-    return data; // should contain { token }
+    return data; // must contain { token }
   } catch (err) {
     console.error('Error from user login:', err);
     return Promise.reject('Could not fetch user info');
   }
 };
+
+export { login };

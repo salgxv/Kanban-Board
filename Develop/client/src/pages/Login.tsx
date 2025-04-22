@@ -1,37 +1,56 @@
-import { Request, Response, Router } from 'express';
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
-import { User } from '../models/user.js';
+import { useState, FormEvent, ChangeEvent } from "react";
+import { login } from "../api/authAPI";
+import Auth from "../utils/auth";
 
-const router = Router();
+const Login = () => {
+  const [formState, setFormState] = useState({ username: "", password: "" });
+  const [error, setError] = useState("");
 
-router.post('/login', async (req: Request, res: Response) => {
-  const { username, password } = req.body;
-  const secretKey = process.env.JWT_SECRET_KEY || 'dev-secret';
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    setFormState(prev => ({ ...prev, [name]: value }));
+  };
 
-  try {
-    let user = await User.findOne({ where: { username } });
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    setError("");
 
-    if (!user) {
-      // ✅ auto-create the user if not found
-      const hashed = await bcrypt.hash(password, 10);
-      user = await User.create({ username, password: hashed });
+    try {
+      const data = await login(formState);
+      Auth.login(data.token); // ✅ Save token and redirect
+    } catch (err) {
+      console.error(err);
+      setError("Invalid username or password");
     }
+  };
 
-    const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) {
-      return res.status(401).json({ message: 'Unauthorized' }); // ✅ JSON response
-    }
+  return (
+    <div className='container'>
+      <form className='form' onSubmit={handleSubmit}>
+        <h1>Login</h1>
 
-    const token = jwt.sign({ username: user.username, id: user.id }, secretKey, {
-      expiresIn: '1h',
-    });
+        <label>Username</label>
+        <input
+          type='text'
+          name='username'
+          value={formState.username}
+          onChange={handleChange}
+        />
 
-    return res.json({ token }); // ✅ returns valid JSON
-  } catch (error) {
-    console.error('Login error:', error);
-    return res.status(500).json({ message: 'Server error' }); // ✅ JSON
-  }
-});
+        <label>Password</label>
+        <input
+          type='password'
+          name='password'
+          value={formState.password}
+          onChange={handleChange}
+        />
 
-export default router;
+        <button type='submit'>Submit Form</button>
+
+        {error && <p style={{ color: "red" }}>{error}</p>}
+      </form>
+    </div>
+  );
+};
+
+export default Login;
