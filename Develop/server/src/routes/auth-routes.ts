@@ -4,46 +4,32 @@ import jwt from 'jsonwebtoken';
 import bcryptjs from 'bcryptjs';
 
 export const login = async (req: Request, res: Response) => {
-  // TODO: If the user exists and the password is correct, return a JWT token
-  console.log('Login endpoint hit'); 
-
-  console.log('Request body:', req.body);
-
   const { username, password } = req.body;
-
-  const user = await User.findOne({
-    where: { username },
-  });
-
-  console.log('User found:', user);
-
-  if (!user) {
-    console.log('User not found — creating one.');
-    const hashed = await bcrypt.hash(password, 10);
-    const newUser = await User.create({ username, password: hashed });
-    const token = jwt.sign({ username }, secretKey, { expiresIn: '1h' });
-    return res.json({ token });
-  }
-  const passwordIsValid = await bcrypt.compare(password, user.password);
-
-  console.log('Password is valid:', passwordIsValid);
-
-  if (!passwordIsValid) {
-    console.log('Authentication failed: Invalid password');
-    return res.status(401).json({ message: 'Authentication failed' });
-  }
-
   const secretKey = process.env.JWT_SECRET_KEY || '';
 
-  
-  console.log('Generating JWT token for user:', username);
+  try {
+    let user = await User.findOne({ where: { username } });
 
-  const token = jwt.sign({ username }, secretKey, { expiresIn: '1h' });
+    if (!user) {
+      // 👇 Create the user if not found
+      const hashed = await bcryptjs.hash(password, 10);
+      user = await User.create({ username, password: hashed });
+      console.log('✅ New user created:', username);
+    } else {
+      const passwordIsValid = await bcryptjs.compare(password, user.password);
+      if (!passwordIsValid) {
+        console.log('❌ Wrong password');
+        return res.status(401).json({ message: 'Authentication failed' });
+      }
+    }
 
-  // Log the generated token
-  console.log('Generated token:', token);
-
-  return res.json({ token });
+    const token = jwt.sign({ username }, secretKey, { expiresIn: '1h' });
+    console.log('✅ JWT created:', token);
+    return res.json({ token });
+  } catch (err) {
+    console.error('Login error:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
 };
 
 const router = Router();
