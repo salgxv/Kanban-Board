@@ -15,6 +15,7 @@ app.use(express.static('../client/dist'));
 app.use(cors({
   origin: 'https://kanban-board-1-n6t9.onrender.com',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
 app.use(express.json());
