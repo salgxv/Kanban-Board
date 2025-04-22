@@ -14,7 +14,8 @@ const PORT = process.env.PORT || 5432;
 app.use(express.static('../client/dist'));
 app.use(cors({
   origin: 'https://kanban-board-1-n6t9.onrender.com',
-  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
 }));
 app.use(express.json());
 app.use(routes);
