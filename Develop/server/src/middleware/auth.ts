@@ -6,23 +6,22 @@ interface JwtPayload {
 }
 
 export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
-  //verify the token exists and add the user data to the request object
-  const authHeader = req.headers.authorization;
+  // TODO: verify the token exists and add the user data to the request object
+  const authHeader = req.headers['authorization'];
+  const token = authHeader?.split(' ')[1]; // Expecting: "Bearer <token>"
 
-  if (authHeader) {
-    const token = authHeader.split(' ')[1];
-
-    const secretKey = process.env.JWT_SECRET_KEY || '';
-
-    jwt.verify(token, secretKey, (err, user) => {
-      if (err) {
-        return res.sendStatus(403); // Forbidden
-      }
-
-      req.user = user as JwtPayload;
-      return next();
-    });
-  } else {
-    res.sendStatus(401); // Unauthorized
+  if (!token) {
+    return res.sendStatus(401); // Unauthorized
   }
+
+  jwt.verify(token, process.env.JWT_SECRET as string, (err, decoded) => {
+    if (err) {
+      return res.sendStatus(403); // Forbidden
+    }
+
+    const user = decoded as JwtPayload;
+    (req as any).user = user; // Attach user to request
+
+    next(); // Move to next middleware or route
+  });
 };

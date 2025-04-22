@@ -1,13 +1,28 @@
-import { Router } from 'express';
-import authRoutes from './auth-routes.js';
-import apiRoutes from './api/index.js';
-import { authenticateToken } from '../middleware/auth.js';
+const forceDatabaseRefresh = false;
 
-const router = Router();
+import dotenv from 'dotenv';
+dotenv.config();
+import cors from 'cors';
+import express from 'express';
+import routes from './routes/index.js';
+import { sequelize } from './models/index.js';
 
-router.use('/auth', authRoutes);
+const app = express();
+const PORT = process.env.PORT || 5432;
 
-// Add authentication to the API routes
-router.use('/api', authenticateToken, apiRoutes);
+// Serves static files in the entire client's dist folder
+app.use(express.static('../client/dist'));
+app.use(cors({
+  origin: 'https://kanban-board-1-n6t9.onrender.com',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+app.use(express.json());
+app.use(routes);
 
-export default router;
+sequelize.sync({force: forceDatabaseRefresh}).then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server is listening on port ${PORT}`);
+  });
+});
