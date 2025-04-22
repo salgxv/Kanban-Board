@@ -3,14 +3,11 @@ import { UserLogin } from "../interfaces/UserLogin";
 const login = async (userInfo: UserLogin): Promise<{token: string }> => {
   // TODO: make a POST request to the login route
   try {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
+    await fetch('https://kanban-board-droa.onrender.com/api/auth/login', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userInfo),
     });
-
     const data = await response.json();
 
     if (!response.ok) {
