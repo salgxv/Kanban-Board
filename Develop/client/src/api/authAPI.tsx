@@ -1,6 +1,6 @@
 import { UserLogin } from "../interfaces/UserLogin";
 
-const login = async (userInfo: UserLogin): Promise<string> => {
+const login = async (userInfo: UserLogin): Promise<{token: string }> => {
   // TODO: make a POST request to the login route
   try {
     const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
